@@ -12,7 +12,6 @@
     <!-- Include this only if you are planning to use the microphone for video recording -->
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
 
-
     <application
       android:name=".MainApplication"
       android:label="@string/app_name"
@@ -20,6 +19,9 @@
       android:roundIcon="@mipmap/ic_launcher_round"
       android:allowBackup="false"
       android:theme="@style/AppTheme">
+      <meta-data
+        android:name="com.google.firebase.ml.vision.DEPENDENCIES"
+        android:value="ocr" />
       <activity
         android:name=".MainActivity"
         android:label="@string/app_name"

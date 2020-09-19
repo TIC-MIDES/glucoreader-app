@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "158589162160",
+    "firebase_url": "https://glucoreader.firebaseio.com",
+    "project_id": "glucoreader",
+    "storage_bucket": "glucoreader.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:158589162160:android:578fbdc64ad5e01ea5a175",
+        "android_client_info": {
+          "package_name": "com.glucoreader"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "158589162160-q7vndhkacr1f9207dfct9hvn7ik14rib.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAs75Y20pkL-ITKUddzr4E7CGJyvZpQqro"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "158589162160-q7vndhkacr1f9207dfct9hvn7ik14rib.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
