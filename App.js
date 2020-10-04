@@ -1,8 +1,24 @@
-import { PropTypes } from 'prop-types';
-import React, { Component, PureComponent } from 'react';
-import { ActivityIndicator, Animated, Dimensions, Platform, SafeAreaView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {PropTypes} from 'prop-types';
+import React from 'react';
+import {
+  ActivityIndicator,
+  Animated,
+  Dimensions,
+  Platform,
+  SafeAreaView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
-import Scanner, { Filters, RectangleOverlay } from 'react-native-rectangle-scanner';
+import Scanner, {
+  Filters,
+  RectangleOverlay,
+} from 'react-native-rectangle-scanner';
+import axios from 'axios';
+import RNFS from 'react-native-fs';
 
 const styles = StyleSheet.create({
   button: {
@@ -101,7 +117,9 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   loadingContainer: {
-    alignItems: 'center', flex: 1, justifyContent: 'center',
+    alignItems: 'center',
+    flex: 1,
+    justifyContent: 'center',
   },
   overlay: {
     bottom: 0,
@@ -130,7 +148,7 @@ export default class App extends React.Component {
     onLayout: PropTypes.func,
     onPictureTaken: PropTypes.func,
     onPictureProcessed: PropTypes.func,
-  }
+  };
 
   static defaultProps = {
     cameraIsOn: undefined,
@@ -139,7 +157,7 @@ export default class App extends React.Component {
     onPictureProcessed: () => {},
     hideSkip: false,
     initialFilterId: Filters.PLATFORM_DEFAULT_FILTER_ID,
-  }
+  };
 
   constructor(props) {
     super(props);
@@ -179,7 +197,8 @@ export default class App extends React.Component {
       if (this.state.isMultiTasking) return this.turnOffCamera(true);
       if (this.state.device.initialized) {
         if (!this.state.device.hasCamera) return this.turnOffCamera();
-        if (!this.state.device.permissionToUseCamera) return this.turnOffCamera();
+        if (!this.state.device.permissionToUseCamera)
+          return this.turnOffCamera();
       }
 
       if (this.props.cameraIsOn === true && !this.state.showScannerView) {
@@ -206,7 +225,11 @@ export default class App extends React.Component {
   // camera. It also includes the aspect ratio correction of the preview
   onDeviceSetup = (deviceDetails) => {
     const {
-      hasCamera, permissionToUseCamera, flashIsAvailable, previewHeightPercent, previewWidthPercent,
+      hasCamera,
+      permissionToUseCamera,
+      flashIsAvailable,
+      previewHeightPercent,
+      previewWidthPercent,
     } = deviceDetails;
     this.setState({
       loadingCamera: false,
@@ -219,7 +242,7 @@ export default class App extends React.Component {
         previewWidthPercent: previewWidthPercent || 1,
       },
     });
-  }
+  };
 
   // Determine why the camera is disabled.
   getCameraDisabledMessage() {
@@ -227,7 +250,7 @@ export default class App extends React.Component {
       return 'Camera is not allowed in multi tasking mode.';
     }
 
-    const { device } = this.state;
+    const {device} = this.state;
     if (device.initialized) {
       if (!device.hasCamera) {
         return 'Could not find a camera on the device.';
@@ -244,8 +267,10 @@ export default class App extends React.Component {
   getPreviewSize() {
     const dimensions = Dimensions.get('window');
     // We use set margin amounts because for some reasons the percentage values don't align the camera preview in the center correctly.
-    const heightMargin = (1 - this.state.device.previewHeightPercent) * dimensions.height / 2;
-    const widthMargin = (1 - this.state.device.previewWidthPercent) * dimensions.width / 2;
+    const heightMargin =
+      ((1 - this.state.device.previewHeightPercent) * dimensions.height) / 2;
+    const widthMargin =
+      ((1 - this.state.device.previewWidthPercent) * dimensions.width) / 2;
     if (dimensions.height > dimensions.width) {
       // Portrait
       return {
@@ -270,23 +295,23 @@ export default class App extends React.Component {
   capture = () => {
     if (this.state.takingPicture) return;
     if (this.state.processingImage) return;
-    this.setState({ takingPicture: true, processingImage: true });
+    this.setState({takingPicture: true, processingImage: true});
     this.camera.current.capture();
     this.triggerSnapAnimation();
 
     // If capture failed, allow for additional captures
     this.imageProcessorTimeout = setTimeout(() => {
       if (this.state.takingPicture) {
-        this.setState({ takingPicture: false });
+        this.setState({takingPicture: false});
       }
     }, 100);
-  }
+  };
 
   // The picture was captured but still needs to be processed.
   onPictureTaken = (event) => {
-    this.setState({ takingPicture: false });
+    this.setState({takingPicture: false});
     this.props.onPictureTaken(event);
-  }
+  };
 
   // The picture was taken and cached. You can now go on to using it.
   onPictureProcessed = (event) => {
@@ -296,15 +321,39 @@ export default class App extends React.Component {
       processingImage: false,
       showScannerView: this.props.cameraIsOn || false,
     });
-  }
+    if (event?.croppedImage) {
+      RNFS.readFile(event.croppedImage, 'base64').then((base64) => {
+        return axios.post(
+          'https://glucoreader-backend.herokuapp.com/api/1.0/measures/measure',
+          {
+            user_id: 1,
+            measure_picture: base64,
+          },
+        );
+      });
+    }
+  };
 
   // Flashes the screen on capture
   triggerSnapAnimation() {
     Animated.sequence([
-      Animated.timing(this.state.overlayFlashOpacity, { toValue: 0.2, duration: 100 }),
-      Animated.timing(this.state.overlayFlashOpacity, { toValue: 0, duration: 50 }),
-      Animated.timing(this.state.overlayFlashOpacity, { toValue: 0.6, delay: 100, duration: 120 }),
-      Animated.timing(this.state.overlayFlashOpacity, { toValue: 0, duration: 90 }),
+      Animated.timing(this.state.overlayFlashOpacity, {
+        toValue: 0.2,
+        duration: 100,
+      }),
+      Animated.timing(this.state.overlayFlashOpacity, {
+        toValue: 0,
+        duration: 50,
+      }),
+      Animated.timing(this.state.overlayFlashOpacity, {
+        toValue: 0.6,
+        delay: 100,
+        duration: 120,
+      }),
+      Animated.timing(this.state.overlayFlashOpacity, {
+        toValue: 0,
+        duration: 90,
+      }),
     ]).start();
   }
 
@@ -312,12 +361,12 @@ export default class App extends React.Component {
   // but no camera was found, it will not uninitialize the camera state.
   turnOffCamera(shouldUninitializeCamera = false) {
     if (shouldUninitializeCamera && this.state.device.initialized) {
-      this.setState(({ device }) => ({
+      this.setState(({device}) => ({
         showScannerView: false,
-        device: { ...device, initialized: false },
+        device: {...device, initialized: false},
       }));
     } else if (this.state.showScannerView) {
-      this.setState({ showScannerView: false });
+      this.setState({showScannerView: false});
     }
   }
 
@@ -334,15 +383,23 @@ export default class App extends React.Component {
 
   // Renders the flashlight button. Only shown if the device has a flashlight.
   renderFlashControl() {
-    const { flashEnabled, device } = this.state;
+    const {flashEnabled, device} = this.state;
     if (!device.flashIsAvailable) return null;
     return (
       <TouchableOpacity
-        style={[styles.flashControl, { backgroundColor: flashEnabled ? '#FFFFFF80' : '#00000080' }]}
+        style={[
+          styles.flashControl,
+          {backgroundColor: flashEnabled ? '#FFFFFF80' : '#00000080'},
+        ]}
         activeOpacity={0.8}
-        onPress={() => this.setState({ flashEnabled: !flashEnabled })}
-      >
-        <Icon name="ios-flashlight" style={[styles.buttonIcon, { fontSize: 28, color: flashEnabled ? '#333' : '#FFF' }]} />
+        onPress={() => this.setState({flashEnabled: !flashEnabled})}>
+        <Icon
+          name="ios-flashlight"
+          style={[
+            styles.buttonIcon,
+            {fontSize: 28, color: flashEnabled ? '#333' : '#FFF'},
+          ]}
+        />
       </TouchableOpacity>
     );
   }
@@ -353,13 +410,13 @@ export default class App extends React.Component {
     const dimensions = Dimensions.get('window');
     const aspectRatio = dimensions.height / dimensions.width;
     const isPhone = aspectRatio > 1.6;
-    const cameraIsDisabled = this.state.takingPicture || this.state.processingImage;
-    const disabledStyle = { opacity: cameraIsDisabled ? 0.8 : 1 };
+    const cameraIsDisabled =
+      this.state.takingPicture || this.state.processingImage;
+    const disabledStyle = {opacity: cameraIsDisabled ? 0.8 : 1};
     if (!isPhone) {
       if (dimensions.height < 500) {
         return (
           <View style={styles.buttonContainer}>
-
             <View style={[styles.cameraOutline, disabledStyle]}>
               <TouchableOpacity
                 activeOpacity={0.8}
@@ -372,7 +429,11 @@ export default class App extends React.Component {
       }
       return (
         <View style={styles.buttonContainer}>
-          <View style={[styles.buttonActionGroup, { justifyContent: 'flex-end', marginBottom: 20 }]}>
+          <View
+            style={[
+              styles.buttonActionGroup,
+              {justifyContent: 'flex-end', marginBottom: 20},
+            ]}>
             {this.renderFlashControl()}
           </View>
           <View style={[styles.cameraOutline, disabledStyle]}>
@@ -382,7 +443,6 @@ export default class App extends React.Component {
               onPress={this.capture}
             />
           </View>
-
         </View>
       );
     }
@@ -398,7 +458,14 @@ export default class App extends React.Component {
             />
           </View>
           <View>
-            <View style={[styles.buttonActionGroup, { justifyContent: 'flex-end', marginBottom: this.props.hideSkip ? 0 : 16 }]}>
+            <View
+              style={[
+                styles.buttonActionGroup,
+                {
+                  justifyContent: 'flex-end',
+                  marginBottom: this.props.hideSkip ? 0 : 16,
+                },
+              ]}>
               {this.renderFlashControl()}
             </View>
           </View>
@@ -425,7 +492,9 @@ export default class App extends React.Component {
           <View style={styles.loadingContainer}>
             <View style={styles.processingContainer}>
               <ActivityIndicator color="#333333" size="large" />
-              <Text style={{ color: '#333333', fontSize: 30, marginTop: 10 }}>Processing</Text>
+              <Text style={{color: '#333333', fontSize: 30, marginTop: 10}}>
+                Processing
+              </Text>
             </View>
           </View>
         </View>
@@ -468,7 +537,15 @@ export default class App extends React.Component {
 
       // NOTE: I set the background color on here because for some reason the view doesn't line up correctly otherwise. It's a weird quirk I noticed.
       return (
-        <View style={{ backgroundColor: 'rgba(0, 0, 0, 0)', position: 'relative', marginTop: previewSize.marginTop, marginLeft: previewSize.marginLeft, height: `${previewSize.height * 100}%`, width: `${previewSize.width * 100}%` }}>
+        <View
+          style={{
+            backgroundColor: 'rgba(0, 0, 0, 0)',
+            position: 'relative',
+            marginTop: previewSize.marginTop,
+            marginLeft: previewSize.marginLeft,
+            height: `${previewSize.height * 100}%`,
+            width: `${previewSize.width * 100}%`,
+          }}>
           <Scanner
             onPictureTaken={this.onPictureTaken}
             onPictureProcessed={this.onPictureProcessed}
@@ -476,13 +553,23 @@ export default class App extends React.Component {
             filterId={this.state.filterId}
             ref={this.camera}
             capturedQuality={1}
-            onRectangleDetected={({ detectedRectangle }) => this.setState({ detectedRectangle })}
+            onRectangleDetected={({detectedRectangle}) =>
+              this.setState({detectedRectangle})
+            }
             onDeviceSetup={this.onDeviceSetup}
-            onTorchChanged={({ enabled }) => this.setState({ flashEnabled: enabled })}
+            onTorchChanged={({enabled}) =>
+              this.setState({flashEnabled: enabled})
+            }
             style={styles.scanner}
           />
           {rectangleOverlay}
-          <Animated.View style={{ ...styles.overlay, backgroundColor: 'white', opacity: this.state.overlayFlashOpacity }} />
+          <Animated.View
+            style={{
+              ...styles.overlay,
+              backgroundColor: 'white',
+              opacity: this.state.overlayFlashOpacity,
+            }}
+          />
           {this.renderCameraOverlay()}
         </View>
       );
@@ -506,12 +593,7 @@ export default class App extends React.Component {
       );
     }
 
-    return (
-      <View style={styles.cameraNotAvailableContainer}>
-        {message}
-      </View>
-
-    );
+    return <View style={styles.cameraNotAvailableContainer}>{message}</View>;
   }
 
   render() {
@@ -524,20 +606,23 @@ export default class App extends React.Component {
           this.props.onLayout(event);
           if (this.state.didLoadInitialLayout && Platform.OS === 'ios') {
             const screenWidth = Dimensions.get('screen').width;
-            const isMultiTasking = (
-              Math.round(event.nativeEvent.layout.width) < Math.round(screenWidth)
-            );
+            const isMultiTasking =
+              Math.round(event.nativeEvent.layout.width) <
+              Math.round(screenWidth);
             if (isMultiTasking) {
-              this.setState({ isMultiTasking: true, loadingCamera: false });
+              this.setState({isMultiTasking: true, loadingCamera: false});
             } else {
-              this.setState({ isMultiTasking: false });
+              this.setState({isMultiTasking: false});
             }
           } else {
-            this.setState({ didLoadInitialLayout: true });
+            this.setState({didLoadInitialLayout: true});
           }
-        }}
-      >
-        <StatusBar backgroundColor="black" barStyle="light-content" hidden={Platform.OS !== 'android'} />
+        }}>
+        <StatusBar
+          backgroundColor="black"
+          barStyle="light-content"
+          hidden={Platform.OS !== 'android'}
+        />
         {this.renderCameraView()}
       </View>
     );
