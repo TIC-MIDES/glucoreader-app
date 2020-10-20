@@ -19,6 +19,7 @@ import Scanner, {
 } from 'react-native-rectangle-scanner';
 import axios from 'axios';
 import RNFS from 'react-native-fs';
+import Tts from 'react-native-tts';
 
 const styles = StyleSheet.create({
   button: {
@@ -311,6 +312,14 @@ export default class App extends React.Component {
   onPictureTaken = (event) => {
     this.setState({takingPicture: false});
     this.props.onPictureTaken(event);
+
+    Tts.speak('La foto está siendo procesada, aguarde por favor!', {
+      androidParams: {
+        KEY_PARAM_PAN: -1,
+        KEY_PARAM_VOLUME: 5,
+        KEY_PARAM_STREAM: 'STREAM_MUSIC',
+      },
+    });
   };
 
   // The picture was taken and cached. You can now go on to using it.
@@ -322,15 +331,37 @@ export default class App extends React.Component {
       showScannerView: this.props.cameraIsOn || false,
     });
     if (event?.croppedImage) {
-      RNFS.readFile(event.croppedImage, 'base64').then((base64) => {
-        return axios.post(
-          'https://glucoreader-backend.herokuapp.com/api/1.0/measures/measure',
-          {
-            user_id: 1,
-            measure_picture: base64,
-          },
-        );
-      });
+      RNFS.readFile(event.croppedImage, 'base64')
+        .then((base64) => {
+          return axios.post(
+            'https://glucoreader-backend.herokuapp.com/api/1.0/measures/measure',
+            {
+              user_id: 1,
+              measure_picture: base64,
+            },
+          );
+        })
+        .then((res) => {
+          Tts.speak('Su nivel de glucosa en la sangre es de 180.', {
+            androidParams: {
+              KEY_PARAM_PAN: -1,
+              KEY_PARAM_VOLUME: 5,
+              KEY_PARAM_STREAM: 'STREAM_MUSIC',
+            },
+          });
+        })
+        .catch((err) => {
+          Tts.speak(
+            'Un error ha ocurrido al procesar el resultado. La información será enviada a su medico asignado.',
+            {
+              androidParams: {
+                KEY_PARAM_PAN: -1,
+                KEY_PARAM_VOLUME: 5,
+                KEY_PARAM_STREAM: 'STREAM_MUSIC',
+              },
+            },
+          );
+        });
     }
   };
 
