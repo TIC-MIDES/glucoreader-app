@@ -10,6 +10,8 @@ target 'GlucoReader' do
 
   pod 'TextToSpeech', :path => '../node_modules/react-native-tts'
 
+  pod 'react-native-image-resizer', :path => '../node_modules/react-native-image-resizer'
+
   target 'GlucoReaderTests' do
     inherit! :complete
     # Pods for testing

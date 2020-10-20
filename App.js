@@ -20,6 +20,7 @@ import Scanner, {
 import axios from 'axios';
 import RNFS from 'react-native-fs';
 import Tts from 'react-native-tts';
+import ImageResizer from 'react-native-image-resizer';
 
 const styles = StyleSheet.create({
   button: {
@@ -331,7 +332,17 @@ export default class App extends React.Component {
       showScannerView: this.props.cameraIsOn || false,
     });
     if (event?.croppedImage) {
-      RNFS.readFile(event.croppedImage, 'base64')
+      ImageResizer.createResizedImage(
+        event?.croppedImage,
+        300,
+        180,
+        'JPEG',
+        20,
+        0,
+      )
+        .then((response) => {
+          return RNFS.readFile(response.path, 'base64');
+        })
         .then((base64) => {
           return axios.post(
             'https://glucoreader-backend.herokuapp.com/api/1.0/measures/measure',
@@ -342,15 +353,19 @@ export default class App extends React.Component {
           );
         })
         .then((res) => {
-          Tts.speak('Su nivel de glucosa en la sangre es de 180.', {
-            androidParams: {
-              KEY_PARAM_PAN: -1,
-              KEY_PARAM_VOLUME: 5,
-              KEY_PARAM_STREAM: 'STREAM_MUSIC',
+          Tts.speak(
+            `Su nivel de glucosa en la sangre es de ${res.data.data.value}`,
+            {
+              androidParams: {
+                KEY_PARAM_PAN: -1,
+                KEY_PARAM_VOLUME: 5,
+                KEY_PARAM_STREAM: 'STREAM_MUSIC',
+              },
             },
-          });
+          );
         })
         .catch((err) => {
+          console.log(err);
           Tts.speak(
             'Un error ha ocurrido al procesar el resultado. La información será enviada a su medico asignado.',
             {
