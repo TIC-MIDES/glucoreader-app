@@ -21,6 +21,7 @@ import axios from 'axios';
 import RNFS from 'react-native-fs';
 import Tts from 'react-native-tts';
 import ImageResizer from 'react-native-image-resizer';
+import RNBeep from 'react-native-a-beep';
 
 const styles = StyleSheet.create({
   button: {
@@ -336,7 +337,7 @@ export default class App extends React.Component {
         event?.croppedImage,
         300,
         180,
-        'JPEG',
+        'PNG',
         20,
         0,
       )
@@ -563,6 +564,9 @@ export default class App extends React.Component {
     if (this.state.showScannerView) {
       const previewSize = this.getPreviewSize();
       let rectangleOverlay = null;
+        if (this.state.detectedRectangle) {
+          RNBeep.beep()
+        }
       if (!this.state.loadingCamera && !this.state.processingImage) {
         rectangleOverlay = (
           <RectangleOverlay
