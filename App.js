@@ -11,6 +11,7 @@ import {
   Text,
   TouchableOpacity,
   View,
+  Vibration,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import Scanner, {
@@ -575,7 +576,10 @@ export default class App extends React.Component {
       let rectangleOverlay = null;
       if (!this.state.loadingCamera && !this.state.processingImage) {
         if (this.state.detectedRectangle) {
-          RNBeep.beep()
+          RNBeep.beep();
+          Vibration.vibrate();
+        } else {
+          Vibration.cancel();
         }
         rectangleOverlay = (
           <RectangleOverlay
@@ -654,6 +658,8 @@ export default class App extends React.Component {
 
     return <View style={styles.cameraNotAvailableContainer}>{message}</View>;
   }
+
+  renderLoginForm() {}
 
   render() {
     return (
