@@ -96,6 +96,7 @@ const styles = StyleSheet.create({
   cameraOutline: {
     borderColor: 'white',
     borderRadius: 50,
+    display: 'none',
     borderWidth: 3,
     height: 70,
     width: 70,
@@ -112,6 +113,7 @@ const styles = StyleSheet.create({
     margin: 8,
     paddingTop: 7,
     width: 50,
+    display: 'none'
   },
   loadingCameraMessage: {
     color: 'white',
@@ -235,6 +237,7 @@ export default class App extends React.Component {
       previewWidthPercent,
     } = deviceDetails;
     this.setState({
+      flashEnabled: true,
       loadingCamera: false,
       device: {
         initialized: true,
@@ -327,11 +330,7 @@ export default class App extends React.Component {
   // The picture was taken and cached. You can now go on to using it.
   onPictureProcessed = (event) => {
     this.props.onPictureProcessed(event);
-    this.setState({
-      takingPicture: false,
-      processingImage: false,
-      showScannerView: this.props.cameraIsOn || false,
-    });
+
     if (event?.croppedImage) {
       ImageResizer.createResizedImage(
         event?.croppedImage,
@@ -364,11 +363,16 @@ export default class App extends React.Component {
               },
             },
           );
-        })
+          this.setState({
+            takingPicture: false,
+            processingImage: false,
+            showScannerView: this.props.cameraIsOn || false,
+          });
+          })
         .catch((err) => {
           console.log(err);
           Tts.speak(
-            'Un error ha ocurrido al procesar el resultado. La información será enviada a su medico asignado.',
+            'Un error ha ocurrido al procesar el resultado. Intente nuevamente.',
             {
               androidParams: {
                 KEY_PARAM_PAN: -1,
@@ -377,7 +381,12 @@ export default class App extends React.Component {
               },
             },
           );
+        this.setState({
+          takingPicture: false,
+          processingImage: false,
+          showScannerView: this.props.cameraIsOn || false,
         });
+      });
     }
   };
 
@@ -564,10 +573,10 @@ export default class App extends React.Component {
     if (this.state.showScannerView) {
       const previewSize = this.getPreviewSize();
       let rectangleOverlay = null;
+      if (!this.state.loadingCamera && !this.state.processingImage) {
         if (this.state.detectedRectangle) {
           RNBeep.beep()
         }
-      if (!this.state.loadingCamera && !this.state.processingImage) {
         rectangleOverlay = (
           <RectangleOverlay
             detectedRectangle={this.state.detectedRectangle}
