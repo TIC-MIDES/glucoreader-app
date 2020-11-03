@@ -466,7 +466,7 @@ export default class Camera extends React.Component {
         style={[styles.flashControl, {backgroundColor: '#00000080'}]}
         activeOpacity={0.8}
         onPress={() => {
-          this.props.navigation.navigate('Login');
+          this.props.navigation.replace('Login');
         }}>
         <Icon
           name="medkit-outline"

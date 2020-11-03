@@ -10,6 +10,7 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
+import axios from 'axios';
 
 export default class Login extends React.Component {
   constructor() {
@@ -34,6 +35,7 @@ export default class Login extends React.Component {
       this.setState({
         isLoading: true,
       });
+      // request de login
     }
   };
 
@@ -55,7 +57,7 @@ export default class Login extends React.Component {
         />
         <TextInput
           style={styles.inputStyle}
-          placeholder="Password"
+          placeholder="Contraseña"
           value={this.state.password}
           onChangeText={(val) => this.updateInputVal(val, 'password')}
           maxLength={15}
@@ -63,14 +65,14 @@ export default class Login extends React.Component {
         />
         <Button
           color="#3740FE"
-          title="Signin"
+          title="Iniciar sesión"
           onPress={() => this.userLogin()}
         />
 
         <Text
           style={styles.loginText}
-          onPress={() => this.props.navigation.navigate('Signup')}>
-          Don't have account? Click here to signup
+          onPress={() => this.props.navigation.replace('Camera')}>
+          Volver a la cámara
         </Text>
       </View>
     );
