@@ -5705,6 +5705,11 @@ react-is@^16.12.0, react-is@^16.13.0, react-is@^16.7.0, react-is@^16.8.1, react-
   resolved "https://registry.yarnpkg.com/react-is/-/react-is-16.13.1.tgz#789729a4dc36de2999dc156dd6c1d9c18cea56a4"
   integrity sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ==
 
+react-native-a-beep@^1.0.6:
+  version "1.0.6"
+  resolved "https://registry.yarnpkg.com/react-native-a-beep/-/react-native-a-beep-1.0.6.tgz#ca31228a4e815c9724c5ef9cfd24e716e4aac37c"
+  integrity sha512-tncOgWSz9l4IDHFKF/MYvK3PqS+mNU3eB9WLT/KdmpZPY/GZk+tO49l34GEE9Dn+/vGT+7xU8yK5S359bO1lsg==
+
 react-native-camera@^3.23.1:
   version "3.40.0"
   resolved "https://registry.yarnpkg.com/react-native-camera/-/react-native-camera-3.40.0.tgz#69845991e46b0892cc2b50322d49b18f292c3202"
@@ -5747,9 +5752,10 @@ react-native-reanimated@^1.7.1:
   dependencies:
     fbjs "^1.0.0"
 
-"react-native-rectangle-scanner@https://github.com/TIC-MIDES/react-native-rectangle-scanner.git":
+react-native-rectangle-scanner@^1.0.10:
   version "1.0.10"
-  resolved "https://github.com/TIC-MIDES/react-native-rectangle-scanner.git#9114321aaae6017cff711eb6e8f0618a7897ea6c"
+  resolved "https://registry.yarnpkg.com/react-native-rectangle-scanner/-/react-native-rectangle-scanner-1.0.10.tgz#eddf201013030c12e9c74c893c3a7d7e229780fc"
+  integrity sha512-E9YdHMaRBYXen9wQHOrNa//nZyf2AUqpV+f7v1D3SNJJjuFmqEtxB1gx9qlJCE7ut/Osh7WRCYJL+wVoXQ7S/g==
 
 react-native-safe-area-context@^0.7.3:
   version "0.7.3"
