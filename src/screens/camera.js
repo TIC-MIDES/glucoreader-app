@@ -23,6 +23,7 @@ import RNFS from 'react-native-fs';
 import Tts from 'react-native-tts';
 import ImageResizer from 'react-native-image-resizer';
 import RNBeep from 'react-native-a-beep';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const styles = StyleSheet.create({
   button: {
@@ -343,11 +344,12 @@ export default class Camera extends React.Component {
         .then((response) => {
           return RNFS.readFile(response.path, 'base64');
         })
-        .then((base64) => {
+        .then(async (base64) => {
+          const value = await AsyncStorage.getItem('user_id');
           return axios.post(
             'https://glucoreader-backend.herokuapp.com/api/1.0/measures/measure',
             {
-              user_id: 1,
+              user_id: +value,
               measure_picture: base64,
             },
           );

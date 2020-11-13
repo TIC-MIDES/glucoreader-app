@@ -11,15 +11,35 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default class Login extends React.Component {
-  constructor() {
-    super();
+  constructor(props) {
+    super(props);
     this.state = {
-      email: '',
+      email: '', // the email is the ci
       password: '',
       isLoading: false,
+      isLoggedIn: false,
     };
+  }
+
+  componentDidMount() {
+    Promise.all([
+      AsyncStorage.getItem('user_id'),
+      AsyncStorage.getItem('user_ci'),
+    ])
+      .then(([id, ci]) => {
+        if (id) {
+          this.setState({isLoggedIn: true});
+        }
+        if (ci) {
+          this.setState({email: ci});
+        }
+      })
+      .catch((_err) => {
+        Alert.alert('Error inesperado.');
+      });
   }
 
   updateInputVal = (val, prop) => {
@@ -28,18 +48,64 @@ export default class Login extends React.Component {
     this.setState(state);
   };
 
-  userLogin = () => {
+  userLogin = async (props) => {
     if (this.state.email === '' && this.state.password === '') {
-      Alert.alert('Enter details to signin!');
+      Alert.alert('Ingrese sus credenciales por favor.');
     } else {
       this.setState({
         isLoading: true,
       });
-      // request de login
+      await axios
+        .post('https://glucoreader-backend.herokuapp.com/api/1.0/auth/login', {
+          cedula: this.state.email, // the email is the ci
+          password: this.state.password,
+        })
+        .then(async (response) => {
+          await AsyncStorage.setItem(
+            'user_id',
+            response.data.data.user.id.toString(),
+          );
+          await AsyncStorage.setItem('user_ci', this.state.email.toString());
+          return props.navigation.replace('Camera');
+        })
+        .catch(async (_error) => {
+          Alert.alert(
+            'Ha ocurrido un error, ingrese sus credenciales nuevamente.',
+          );
+          this.setState({
+            isLoading: false,
+          });
+        });
     }
   };
 
+  logout = async () => {
+    await AsyncStorage.clear();
+    this.setState({isLoggedIn: false});
+  };
+
   render() {
+    if (this.state.isLoggedIn) {
+      return (
+        <View style={styles.container}>
+          <TextInput
+            style={styles.inputStyle}
+            placeholder="Cedula del paciente"
+            value={this.state.email}
+          />
+          <Button
+            color="#3740FE"
+            title="Cerrar sesión"
+            onPress={() => this.logout(this.props)}
+          />
+          <Text
+            style={styles.loginText}
+            onPress={() => this.props.navigation.replace('Camera')}>
+            Volver a la cámara
+          </Text>
+        </View>
+      );
+    }
     if (this.state.isLoading) {
       return (
         <View style={styles.preloader}>
@@ -51,7 +117,7 @@ export default class Login extends React.Component {
       <View style={styles.container}>
         <TextInput
           style={styles.inputStyle}
-          placeholder="Email"
+          placeholder="Cedula del paciente"
           value={this.state.email}
           onChangeText={(val) => this.updateInputVal(val, 'email')}
         />
@@ -66,7 +132,7 @@ export default class Login extends React.Component {
         <Button
           color="#3740FE"
           title="Iniciar sesión"
-          onPress={() => this.userLogin()}
+          onPress={() => this.userLogin(this.props)}
         />
 
         <Text
