@@ -12,6 +12,7 @@ import {
   TouchableOpacity,
   View,
   Vibration,
+  AppState,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import Scanner, {
@@ -24,6 +25,7 @@ import Tts from 'react-native-tts';
 import ImageResizer from 'react-native-image-resizer';
 import RNBeep from 'react-native-a-beep';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import RNRestart from 'react-native-restart';
 
 const styles = StyleSheet.create({
   button: {
@@ -148,6 +150,28 @@ const styles = StyleSheet.create({
   },
 });
 
+const defaultState = {
+  flashEnabled: false,
+  showScannerView: false,
+  didLoadInitialLayout: false,
+  filterId: 1,
+  detectedRectangle: false,
+  isMultiTasking: false,
+  loadingCamera: true,
+  processingImage: false,
+  takingPicture: false,
+  overlayFlashOpacity: new Animated.Value(0),
+  device: {
+    initialized: false,
+    hasCamera: false,
+    permissionToUseCamera: false,
+    flashIsAvailable: false,
+    previewHeightPercent: 1,
+    previewWidthPercent: 1,
+  },
+  appState: AppState.currentState,
+};
+
 export default class Camera extends React.Component {
   static propTypes = {
     cameraIsOn: PropTypes.bool,
@@ -186,6 +210,7 @@ export default class Camera extends React.Component {
         previewHeightPercent: 1,
         previewWidthPercent: 1,
       },
+      appState: AppState.currentState,
     };
 
     this.camera = React.createRef();
@@ -193,6 +218,7 @@ export default class Camera extends React.Component {
   }
 
   componentDidMount() {
+    AppState.addEventListener('change', this._handleAppStateChange);
     if (this.state.didLoadInitialLayout && !this.state.isMultiTasking) {
       this.turnOnCamera();
     }
@@ -223,8 +249,19 @@ export default class Camera extends React.Component {
   }
 
   componentWillUnmount() {
+    AppState.removeEventListener('change', this._handleAppStateChange);
     clearTimeout(this.imageProcessorTimeout);
   }
+
+  _handleAppStateChange = (nextAppState) => {
+    if (
+      this.state.appState.match(/inactive|background/) &&
+      nextAppState === 'active'
+    ) {
+      RNRestart.Restart();
+    }
+    this.setState({appState: nextAppState});
+  };
 
   // Called after the device gets setup. This lets you know some platform specifics
   // like if the device has a camera or flash, or even if you have permission to use the

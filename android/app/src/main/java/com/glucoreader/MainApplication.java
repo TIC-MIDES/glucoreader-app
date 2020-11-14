@@ -4,6 +4,7 @@ import android.app.Application;
 import android.content.Context;
 import com.facebook.react.PackageList;
 import com.facebook.react.ReactApplication;
+import com.reactnativerestart.RestartPackage;
 import fr.bamlab.rnimageresizer.ImageResizerPackage;
 import net.no_mad.tts.TextToSpeechPackage;
 import com.facebook.react.ReactInstanceManager;
@@ -29,6 +30,8 @@ public class MainApplication extends MultiDexApplication implements ReactApplica
           @SuppressWarnings("UnnecessaryLocalVariable")
           List<ReactPackage> packages = new PackageList(this).getPackages();
           new AsyncStoragePackage();
+          new RestartPackage(); // Add this line 
+
           return packages;
         }
 
