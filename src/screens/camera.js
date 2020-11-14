@@ -170,6 +170,7 @@ const defaultState = {
     previewWidthPercent: 1,
   },
   appState: AppState.currentState,
+  number: 0,
 };
 
 export default class Camera extends React.Component {
@@ -263,7 +264,7 @@ export default class Camera extends React.Component {
       this.state.appState.match(/inactive|background/) &&
       nextAppState === 'active'
     ) {
-      this.setState({showScannerView: false}, () => {
+      this.setState({...defaultState}, () => {
         this.turnOnCamera();
       });
     }
