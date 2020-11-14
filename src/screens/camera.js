@@ -12,6 +12,7 @@ import {
   TouchableOpacity,
   View,
   Vibration,
+  Image,
   AppState,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -151,7 +152,7 @@ const styles = StyleSheet.create({
 });
 
 const defaultState = {
-  flashEnabled: false,
+  flashEnabled: true,
   showScannerView: false,
   didLoadInitialLayout: false,
   filterId: 1,
@@ -375,66 +376,103 @@ export default class Camera extends React.Component {
 
   // The picture was taken and cached. You can now go on to using it.
   onPictureProcessed = (event) => {
-    this.props.onPictureProcessed(event);
+    this.props.onPictureProcessed(event); 
 
-    if (event?.croppedImage) {
-      ImageResizer.createResizedImage(
-        event?.croppedImage,
-        300,
-        180,
-        'PNG',
-        20,
-        0,
-      )
-        .then((response) => {
-          return RNFS.readFile(response.path, 'base64');
-        })
-        .then(async (base64) => {
-          const value = await AsyncStorage.getItem('user_id');
-          return axios.post(
-            'https://glucoreader-backend.herokuapp.com/api/1.0/measures/measure',
-            {
-              user_id: +value,
-              measure_picture: base64,
-            },
-          );
-        })
-        .then((res) => {
-          Tts.speak(
-            `Su nivel de glucosa en la sangre es de ${res.data.data.value}`,
-            {
-              androidParams: {
-                KEY_PARAM_PAN: -1,
-                KEY_PARAM_VOLUME: 5,
-                KEY_PARAM_STREAM: 'STREAM_MUSIC',
+      if (event.croppedImage) {
+            Image.getSize(event.croppedImage, (width, height) => {
+          if (height > width) {
+            Tts.speak(
+              'No se pudo capturar correctamente el dispositivo. Intente nuevamente.',
+              {
+                androidParams: {
+                  KEY_PARAM_PAN: -1,
+                  KEY_PARAM_VOLUME: 5,
+                  KEY_PARAM_STREAM: 'STREAM_MUSIC',
+                },
               },
+            );
+            this.setState({
+              takingPicture: false,
+              processingImage: false,
+              showScannerView: this.props.cameraIsOn || false,
+            });
+          } else {
+            ImageResizer.createResizedImage(
+              event?.croppedImage,
+              300,
+              180,
+              'PNG',
+              20,
+              0,
+            )
+              .then((response) => {
+                return RNFS.readFile(response.path, 'base64');
+              })
+              .then(async (base64) => {
+                const value = await AsyncStorage.getItem('user_id');
+                return axios.post(
+                  'https://glucoreader-backend.herokuapp.com/api/1.0/measures/measure',
+                  {
+                    user_id: +value,
+                    measure_picture: base64,
+                  },
+                );
+              })
+              .then((res) => {
+                Tts.speak(
+                  `Su nivel de glucosa en la sangre es de ${res.data.data.value}`,
+                  {
+                    androidParams: {
+                      KEY_PARAM_PAN: -1,
+                      KEY_PARAM_VOLUME: 5,
+                      KEY_PARAM_STREAM: 'STREAM_MUSIC',
+                    },
+                  },
+                );
+                this.setState({
+                  takingPicture: false,
+                  processingImage: false,
+                  showScannerView: this.props.cameraIsOn || false,
+                });
+              })
+              .catch((err) => {
+                console.log(err);
+                Tts.speak(
+                  'No se pudo leer correctamente el resultado. Intente nuevamente.',
+                  {
+                    androidParams: {
+                      KEY_PARAM_PAN: -1,
+                      KEY_PARAM_VOLUME: 5,
+                      KEY_PARAM_STREAM: 'STREAM_MUSIC',
+                    },
+                  },
+                );
+                this.setState({
+                  takingPicture: false,
+                  processingImage: false,
+                  showScannerView: this.props.cameraIsOn || false,
+                });
+              });
+          }
+         });
+
+      } else {
+        Tts.speak(
+          'No se pudo capturar correctamente el dispositivo. Intente nuevamente.',
+          {
+            androidParams: {
+              KEY_PARAM_PAN: -1,
+              KEY_PARAM_VOLUME: 5,
+              KEY_PARAM_STREAM: 'STREAM_MUSIC',
             },
-          );
-          this.setState({
-            takingPicture: false,
-            processingImage: false,
-            showScannerView: this.props.cameraIsOn || false,
-          });
-        })
-        .catch((err) => {
-          console.log(err);
-          Tts.speak(
-            'No se pudo leer correctamente el resultado. Intente nuevamente.',
-            {
-              androidParams: {
-                KEY_PARAM_PAN: -1,
-                KEY_PARAM_VOLUME: 5,
-                KEY_PARAM_STREAM: 'STREAM_MUSIC',
-              },
-            },
-          );
-          this.setState({
-            takingPicture: false,
-            processingImage: false,
-            showScannerView: this.props.cameraIsOn || false,
-          });
+          },
+        );
+        this.setState({
+          takingPicture: false,
+          processingImage: false,
+          showScannerView: this.props.cameraIsOn || false,
         });
-    }
+      }
   };
 
   // Flashes the screen on capture
@@ -484,28 +522,6 @@ export default class Camera extends React.Component {
     }
   }
 
-  // Renders the flashlight button. Only shown if the device has a flashlight.
-  renderFlashControl() {
-    const {flashEnabled, device} = this.state;
-    if (!device.flashIsAvailable) return null;
-    return (
-      <TouchableOpacity
-        style={[
-          styles.flashControl,
-          {backgroundColor: flashEnabled ? '#FFFFFF80' : '#00000080'},
-        ]}
-        activeOpacity={0.8}
-        onPress={() => this.setState({flashEnabled: !flashEnabled})}>
-        <Icon
-          name="ios-flashlight"
-          style={[
-            styles.buttonIcon,
-            {fontSize: 28, color: flashEnabled ? '#333' : '#FFF'},
-          ]}
-        />
-      </TouchableOpacity>
-    );
-  }
 
   addOne() {
     if (this.state.number > 10) {
