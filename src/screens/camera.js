@@ -593,7 +593,7 @@ export default class Camera extends React.Component {
         <View style={styles.overlay}>
           <View style={styles.loadingContainer}>
             <ActivityIndicator color="white" />
-            <Text style={styles.loadingCameraMessage}>Loading Camera</Text>
+            <Text style={styles.loadingCameraMessage}>Cargando cámara</Text>
           </View>
         </View>
       );
@@ -604,7 +604,7 @@ export default class Camera extends React.Component {
             <View style={styles.processingContainer}>
               <ActivityIndicator color="#333333" size="large" />
               <Text style={{color: '#333333', fontSize: 30, marginTop: 10}}>
-                Processing
+                Procesando
               </Text>
             </View>
           </View>
@@ -649,7 +649,7 @@ export default class Camera extends React.Component {
             onDetectedCapture={this.capture}
             allowDetection={true}
             detectionCountBeforeCapture={4}
-            rectangleDifferenceAllowance={200}
+            rectangleDifferenceAllowance={100}
           />
         );
       }
@@ -700,7 +700,7 @@ export default class Camera extends React.Component {
         <View style={styles.overlay}>
           <View style={styles.loadingContainer}>
             <ActivityIndicator color="white" />
-            <Text style={styles.loadingCameraMessage}>Loading Camera</Text>
+            <Text style={styles.loadingCameraMessage}>Cargando cámera</Text>
           </View>
         </View>
       );
