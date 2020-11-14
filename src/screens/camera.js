@@ -211,7 +211,12 @@ export default class Camera extends React.Component {
         previewWidthPercent: 1,
       },
       appState: AppState.currentState,
+      number: 0,
     };
+
+    this.timer = null;
+    this.addOne = this.addOne.bind(this);
+    this.stopTimer = this.stopTimer.bind(this);
 
     this.camera = React.createRef();
     this.imageProcessorTimeout = null;
@@ -258,7 +263,9 @@ export default class Camera extends React.Component {
       this.state.appState.match(/inactive|background/) &&
       nextAppState === 'active'
     ) {
-      RNRestart.Restart();
+      this.setState({showScannerView: false}, () => {
+        this.turnOnCamera();
+      });
     }
     this.setState({appState: nextAppState});
   };
@@ -499,14 +506,30 @@ export default class Camera extends React.Component {
     );
   }
 
+  addOne() {
+    if (this.state.number > 10) {
+      this.setState({number: 0, showScannerView: false}, () => {
+        clearTimeout(this.timer);
+        this.props.navigation.replace('Login');
+      });
+    } else {
+      this.setState({number: this.state.number + 1});
+      this.timer = setTimeout(this.addOne, 200);
+    }
+  }
+
+  stopTimer() {
+    this.setState({number: 0});
+    clearTimeout(this.timer);
+  }
+
   renderDoctorButtonControl() {
     return (
       <TouchableOpacity
         style={[styles.flashControl, {backgroundColor: '#00000080'}]}
         activeOpacity={0.8}
-        onPress={() => {
-          this.props.navigation.navigate('Login');
-        }}>
+        onPressIn={this.addOne}
+        onPressOut={this.stopTimer}>
         <Icon
           name="medkit-outline"
           style={[styles.buttonIcon, {fontSize: 28, color: '#FFF'}]}
