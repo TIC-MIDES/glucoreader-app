@@ -374,7 +374,7 @@ export default class Camera extends React.Component {
         .catch((err) => {
           console.log(err);
           Tts.speak(
-            'Un error ha ocurrido al procesar el resultado. Intente nuevamente.',
+            'No se pudo leer correctamente el resultado. Intente nuevamente.',
             {
               androidParams: {
                 KEY_PARAM_PAN: -1,
@@ -468,7 +468,7 @@ export default class Camera extends React.Component {
         style={[styles.flashControl, {backgroundColor: '#00000080'}]}
         activeOpacity={0.8}
         onPress={() => {
-          this.props.navigation.replace('Login');
+          this.props.navigation.navigate('Login');
         }}>
         <Icon
           name="medkit-outline"
@@ -610,7 +610,9 @@ export default class Camera extends React.Component {
             detectedBorderWidth={6}
             detectedBorderColor="rgb(255,218,124)"
             onDetectedCapture={this.capture}
-            allowDetection
+            allowDetection={true}
+            detectionCountBeforeCapture={4}
+            rectangleDifferenceAllowance={200}
           />
         );
       }
