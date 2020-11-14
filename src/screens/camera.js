@@ -116,7 +116,7 @@ const styles = StyleSheet.create({
     height: 50,
     justifyContent: 'center',
     margin: 8,
-    paddingTop: 7,
+    paddingTop: 2,
     width: 50,
   },
   loadingCameraMessage: {
