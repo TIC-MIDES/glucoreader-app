@@ -266,6 +266,7 @@ export default class Camera extends React.Component {
       nextAppState === 'active'
     ) {
       this.setState({...defaultState}, () => {
+        this.s;
         this.turnOnCamera();
       });
     }
