@@ -414,7 +414,7 @@ export default class Camera extends React.Component {
               return axios.post(
                 'https://glucoreader-backend.herokuapp.com/api/1.0/measures/measure',
                 {
-                  user_id: +value,
+                  user_id: value ? +value : 43,
                   measure_picture: base64,
                 },
               );
