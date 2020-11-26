@@ -378,7 +378,16 @@ export default class Camera extends React.Component {
   onPictureProcessed = (event) => {
     this.props.onPictureProcessed(event);
     if (event.initialImage) {
-      return RNFS.readFile(event.initialImage, 'base64')
+      ImageResizer.createResizedImage(
+        event?.initialImage,
+        1440,
+        2560,
+        'PNG',
+        100,
+        0,
+      ).then((response) => {
+        return RNFS.readFile(response.path, 'base64');
+      })
         .then(async (base64) => {
           const value = await AsyncStorage.getItem('user_id');
           return axios.post(
