@@ -408,11 +408,7 @@ export default class Camera extends React.Component {
               },
             },
           );
-          this.setState({
-            takingPicture: false,
-            processingImage: false,
-            showScannerView: this.props.cameraIsOn || false,
-          });
+          this.setState({...defaultState}, () => this.turnOnCamera())
         })
         .catch((err) => {
           console.log(err);
@@ -426,11 +422,7 @@ export default class Camera extends React.Component {
               },
             },
           );
-          this.setState({
-            takingPicture: false,
-            processingImage: false,
-            showScannerView: this.props.cameraIsOn || false,
-          });
+          this.setState({...defaultState}, () => this.turnOnCamera())
         });
     } else {
       Tts.speak(
