@@ -265,11 +265,10 @@ export default class Camera extends React.Component {
       this.state.appState.match(/inactive|background/) &&
       nextAppState === 'active'
     ) {
-      this.setState({...defaultState}, () => {
-        this.turnOnCamera();
-      });
+      this.setState({...defaultState}, () => this.turnOnCamera())
+    } else {
+      this.setState({appState: nextAppState});
     }
-    this.setState({appState: nextAppState});
   };
 
   // Called after the device gets setup. This lets you know some platform specifics
@@ -721,7 +720,6 @@ export default class Camera extends React.Component {
         </View>
       );
     } else {
-      this.setState({...defaultState});
       message = (
         <Text style={styles.cameraNotAvailableText}>
           {this.getCameraDisabledMessage()}
