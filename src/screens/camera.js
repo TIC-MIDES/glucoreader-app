@@ -390,7 +390,7 @@ export default class Camera extends React.Component {
         .then(async (base64) => {
           const value = await AsyncStorage.getItem('user_id');
           return axios.post(
-            'https://glucoreader-backend.herokuapp.com/api/1.0/measures/measure',
+            'http://179.27.96.192/api/1.0/measures/measure',
             {
               user_id: value ? +value : 50,
               measure_picture: base64,
@@ -655,8 +655,8 @@ export default class Camera extends React.Component {
             detectedBorderColor="rgb(255,218,124)"
             onDetectedCapture={this.capture}
             allowDetection={true}
-            detectionCountBeforeCapture={4}
-            rectangleDifferenceAllowance={100}
+            detectionCountBeforeCapture={5}
+            rectangleDifferenceAllowance={200}
           />
         );
       }

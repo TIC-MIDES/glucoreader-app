@@ -56,7 +56,7 @@ export default class Login extends React.Component {
         isLoading: true,
       });
       await axios
-        .post('https://glucoreader-backend.herokuapp.com/api/1.0/auth/login', {
+        .post('http://179.27.96.192/api/1.0/auth/login', {
           cedula: this.state.email, // the email is the ci
           password: this.state.password,
         })
