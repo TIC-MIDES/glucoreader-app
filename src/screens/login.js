@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {openDatabase} from 'react-native-sqlite-storage';
 
 var db = openDatabase({name: 'sqlite.db'});
 export default class Login extends React.Component {
