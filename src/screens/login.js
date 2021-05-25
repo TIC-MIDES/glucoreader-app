@@ -13,6 +13,7 @@ import {
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+var db = openDatabase({name: 'sqlite.db'});
 export default class Login extends React.Component {
   constructor(props) {
     super(props);
@@ -21,6 +22,8 @@ export default class Login extends React.Component {
       password: '',
       isLoading: false,
       isLoggedIn: false,
+      exportToEmail: '',
+      inputEmailVisible: false,
     };
   }
 
@@ -49,7 +52,8 @@ export default class Login extends React.Component {
   };
 
   userLogin = async (props) => {
-    if (this.state.email === '' && this.state.password === '') {
+    const {email, password} = this.state;
+    if (email === '' && password === '') {
       Alert.alert('Ingrese sus credenciales por favor.');
     } else {
       this.setState({
@@ -65,7 +69,7 @@ export default class Login extends React.Component {
             'user_id',
             response.data.data.user.id.toString(),
           );
-          await AsyncStorage.setItem('user_ci', this.state.email.toString());
+          await AsyncStorage.setItem('user_ci', email.toString());
           return props.navigation.replace('Camera');
         })
         .catch(async (_error) => {
@@ -85,13 +89,22 @@ export default class Login extends React.Component {
   };
 
   render() {
-    if (this.state.isLoggedIn) {
+    const {
+      exportToEmail,
+      inputEmailVisible,
+      isLoading,
+      isLoggedIn,
+      password,
+      email,
+    } = this.state;
+
+    if (isLoggedIn) {
       return (
         <View style={styles.container}>
           <TextInput
             style={styles.inputStyle}
             placeholder="Cedula del paciente"
-            value={this.state.email}
+            value={email}
           />
           <Button
             color="#3740FE"
@@ -103,10 +116,26 @@ export default class Login extends React.Component {
             onPress={() => this.props.navigation.replace('Camera')}>
             Volver a la cámara
           </Text>
+          <Text
+            style={styles.loginText}
+            onPress={() =>
+              this.updateInputVal(!inputEmailVisible, 'inputEmailVisible')
+            }>
+            Exportar histórico de resultados
+          </Text>
+          {inputEmailVisible && (
+            <TextInput
+              style={styles.inputStyle}
+              placeholder="Email del receptor"
+              value={exportToEmail}
+              onChangeText={(val) => this.updateInputVal(val, 'exportToEmail')}
+            />
+          )}
+          {inputEmailVisible && <Button color="#3740FE" title="Enviar" />}
         </View>
       );
     }
-    if (this.state.isLoading) {
+    if (isLoading) {
       return (
         <View style={styles.preloader}>
           <ActivityIndicator size="large" color="#9E9E9E" />
@@ -118,13 +147,13 @@ export default class Login extends React.Component {
         <TextInput
           style={styles.inputStyle}
           placeholder="Cedula del paciente"
-          value={this.state.email}
+          value={email}
           onChangeText={(val) => this.updateInputVal(val, 'email')}
         />
         <TextInput
           style={styles.inputStyle}
           placeholder="Contraseña"
-          value={this.state.password}
+          value={password}
           onChangeText={(val) => this.updateInputVal(val, 'password')}
           maxLength={15}
           secureTextEntry={true}
@@ -139,6 +168,12 @@ export default class Login extends React.Component {
           style={styles.loginText}
           onPress={() => this.props.navigation.replace('Camera')}>
           Volver a la cámara
+        </Text>
+
+        <Text
+          style={styles.loginText}
+          onPress={() => this.props.navigation.replace('Camera')}>
+          Exportar histórico de resultados
         </Text>
       </View>
     );

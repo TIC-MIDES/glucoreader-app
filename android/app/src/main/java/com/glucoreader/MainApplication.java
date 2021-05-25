@@ -15,6 +15,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import androidx.multidex.MultiDexApplication;
 import com.reactnativecommunity.asyncstorage.AsyncStoragePackage;
+import com.facebook.react.shell.MainReactPackage;
+import org.pgsqlite.SQLitePluginPackage;
 
 public class MainApplication extends MultiDexApplication implements ReactApplication {
 
@@ -31,7 +33,8 @@ public class MainApplication extends MultiDexApplication implements ReactApplica
           List<ReactPackage> packages = new PackageList(this).getPackages();
           new AsyncStoragePackage();
           new RestartPackage(); // Add this line 
-
+          new SQLitePluginPackage();
+          new MainReactPackage();
           return packages;
         }
 

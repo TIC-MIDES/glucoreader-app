@@ -12,7 +12,6 @@ import {
   TouchableOpacity,
   View,
   Vibration,
-  Image,
   AppState,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -26,7 +25,7 @@ import Tts from 'react-native-tts';
 import ImageResizer from 'react-native-image-resizer';
 import RNBeep from 'react-native-a-beep';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import RNRestart from 'react-native-restart';
+import {openDatabase} from 'react-native-sqlite-storage';
 
 const styles = StyleSheet.create({
   button: {
@@ -174,6 +173,7 @@ const defaultState = {
   number: 0,
 };
 
+var db = openDatabase({name: 'sqlite.db'});
 export default class Camera extends React.Component {
   static propTypes = {
     cameraIsOn: PropTypes.bool,
@@ -265,7 +265,7 @@ export default class Camera extends React.Component {
       this.state.appState.match(/inactive|background/) &&
       nextAppState === 'active'
     ) {
-      this.setState({...defaultState}, () => this.turnOnCamera())
+      this.setState({...defaultState}, () => this.turnOnCamera());
     } else {
       this.setState({appState: nextAppState});
     }
@@ -310,7 +310,7 @@ export default class Camera extends React.Component {
       if (!device.permissionToUseCamera) {
         return 'Permission to use camera has not been granted.';
       }
-    }   
+    }
     return 'Failed to set up the camera.';
   }
 
@@ -361,7 +361,7 @@ export default class Camera extends React.Component {
 
   // The picture was captured but still needs to be processed.
   onPictureTaken = (event) => {
-    this.setState({takingPicture: false});
+    this.setState({takingPicture: false, flashEnabled: false});
     this.props.onPictureTaken(event);
 
     Tts.speak('La foto está siendo procesada, aguarde por favor!', {
@@ -384,18 +384,16 @@ export default class Camera extends React.Component {
         'PNG',
         100,
         0,
-      ).then((response) => {
-        return RNFS.readFile(response.path, 'base64');
-      })
+      )
+        .then((response) => {
+          return RNFS.readFile(response.path, 'base64');
+        })
         .then(async (base64) => {
           const value = await AsyncStorage.getItem('user_id');
-          return axios.post(
-            'http://179.27.96.192/api/1.0/measures/measure',
-            {
-              user_id: value ? +value : 50,
-              measure_picture: base64,
-            },
-          );
+          return axios.post('http://179.27.96.192/api/1.0/measures/measure', {
+            user_id: value ? +value : 50,
+            measure_picture: base64,
+          });
         })
         .then((res) => {
           Tts.speak(
@@ -408,7 +406,13 @@ export default class Camera extends React.Component {
               },
             },
           );
-          this.setState({...defaultState}, () => this.turnOnCamera())
+          db.transaction(function (tx) {
+            tx.executeSql(
+              'INSERT INTO records (timestamp_ms, result) VALUES (?,?)',
+              [new Date().getTime(), res.data.data.value],
+            );
+          });
+          this.setState({...defaultState}, () => this.turnOnCamera());
         })
         .catch((err) => {
           console.log(err);
@@ -422,7 +426,7 @@ export default class Camera extends React.Component {
               },
             },
           );
-          this.setState({...defaultState}, () => this.turnOnCamera())
+          this.setState({...defaultState}, () => this.turnOnCamera());
         });
     } else {
       Tts.speak(
