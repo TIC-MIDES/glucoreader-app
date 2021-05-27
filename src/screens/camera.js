@@ -379,8 +379,8 @@ export default class Camera extends React.Component {
     if (event.initialImage) {
       ImageResizer.createResizedImage(
         event?.initialImage,
-        1440,
-        2560,
+        480,
+        640,
         'PNG',
         100,
         0,
