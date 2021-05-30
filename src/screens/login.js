@@ -25,6 +25,7 @@ export default class Login extends React.Component {
       isLoggedIn: false,
       exportToEmail: '',
       inputEmailVisible: false,
+      records: [],
     };
   }
 
@@ -62,8 +63,8 @@ export default class Login extends React.Component {
       });
       await axios
         .post('http://179.27.96.192/api/1.0/auth/login', {
-          cedula: this.state.email, // the email is the ci
-          password: this.state.password,
+          cedula: email, // the email is the ci
+          password: password,
         })
         .then(async (response) => {
           await AsyncStorage.setItem(
@@ -89,6 +90,45 @@ export default class Login extends React.Component {
     this.setState({isLoggedIn: false});
   };
 
+  exportHistoric = async () => {
+    const {records, exportToEmail, isLoggedIn} = this.state;
+    if (isLoggedIn) {
+      await db.transaction((tx) => {
+        tx.executeSql('SELECT * FROM records;', [], (tx, results) => {
+          const rows = results.rows;
+          let records = [];
+          for (let i = 0; i < rows.length; i++) {
+            records.push({
+              ...rows.item(i),
+            });
+          }
+          this.setState({records});
+        });
+      });
+    }
+    this.setState({
+      isLoading: true,
+    });
+    await axios
+      .post('http://179.27.96.192/api/1.0/measures', {
+        email: exportToEmail, // the email is the ci
+        data: records.map((r) => ({date: r.timestamp_ms, measure: r.result})),
+      })
+      .then(async (response) => {
+        Alert.alert('Registros enviados correctamente.');
+        this.setState({
+          isLoading: false,
+        });
+      })
+      .catch(async (_error) => {
+        Alert.alert(
+          'Ha ocurrido un error, ingrese sus credenciales nuevamente.',
+        );
+        this.setState({
+          isLoading: false,
+        });
+      });
+  };
   render() {
     const {
       exportToEmail,
@@ -132,7 +172,13 @@ export default class Login extends React.Component {
               onChangeText={(val) => this.updateInputVal(val, 'exportToEmail')}
             />
           )}
-          {inputEmailVisible && <Button color="#3740FE" title="Enviar" />}
+          {inputEmailVisible && (
+            <Button
+              color="#3740FE"
+              title="Enviar"
+              onPress={() => this.exportHistoric()}
+            />
+          )}
         </View>
       );
     }
@@ -173,9 +219,27 @@ export default class Login extends React.Component {
 
         <Text
           style={styles.loginText}
-          onPress={() => this.props.navigation.replace('Camera')}>
+          onPress={() =>
+            this.updateInputVal(!inputEmailVisible, 'inputEmailVisible')
+          }>
           Exportar histórico de resultados
         </Text>
+
+        {inputEmailVisible && (
+          <TextInput
+            style={styles.inputStyle}
+            placeholder="Email del receptor"
+            value={exportToEmail}
+            onChangeText={(val) => this.updateInputVal(val, 'exportToEmail')}
+          />
+        )}
+        {inputEmailVisible && (
+          <Button
+            color="#3740FE"
+            title="Enviar"
+            onPress={() => this.exportHistoric()}
+          />
+        )}
       </View>
     );
   }

@@ -8,3 +8,14 @@
 #   http://developer.android.com/guide/developing/tools/proguard.html
 
 # Add any project specific keep options here:
+-ignorewarnings
+-keep class * {
+    public private *;
+}
+-dontwarn com.squareup.picasso.**
+-dontwarn com.squareup.okhttp.internal.**
+-dontwarn org.apache.commons.logging.**
+-ignorewarnings 
+-keep class * {
+  public private protected *;
+}

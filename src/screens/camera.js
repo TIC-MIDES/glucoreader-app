@@ -349,7 +349,6 @@ export default class Camera extends React.Component {
     if (this.state.processingImage) return;
     this.setState({takingPicture: true, processingImage: true});
     this.camera.current.capture();
-    this.triggerSnapAnimation();
 
     // If capture failed, allow for additional captures
     this.imageProcessorTimeout = setTimeout(() => {
@@ -361,16 +360,19 @@ export default class Camera extends React.Component {
 
   // The picture was captured but still needs to be processed.
   onPictureTaken = (event) => {
-    this.setState({takingPicture: false, flashEnabled: false});
+    this.setState({takingPicture: false});
     this.props.onPictureTaken(event);
-
-    Tts.speak('La foto está siendo procesada, aguarde por favor!', {
-      androidParams: {
-        KEY_PARAM_PAN: -1,
-        KEY_PARAM_VOLUME: 5,
-        KEY_PARAM_STREAM: 'STREAM_MUSIC',
-      },
-    });
+    try {
+      Tts.speak('La foto está siendo procesada, aguarde por favor!', {
+        androidParams: {
+          KEY_PARAM_PAN: -1,
+          KEY_PARAM_VOLUME: 5,
+          KEY_PARAM_STREAM: 'STREAM_MUSIC',
+        },
+      });
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   // The picture was taken and cached. You can now go on to using it.
@@ -439,11 +441,7 @@ export default class Camera extends React.Component {
           },
         },
       );
-      this.setState({
-        takingPicture: false,
-        processingImage: false,
-        showScannerView: this.props.cameraIsOn || false,
-      });
+      this.setState({...defaultState}, () => this.turnOnCamera());
     }
   };
 
@@ -664,7 +662,6 @@ export default class Camera extends React.Component {
           />
         );
       }
-
       // NOTE: I set the background color on here because for some reason the view doesn't line up correctly otherwise. It's a weird quirk I noticed.
       return (
         <View
@@ -691,6 +688,7 @@ export default class Camera extends React.Component {
               this.setState({flashEnabled: enabled})
             }
             style={styles.scanner}
+            onErrorProcessingImage={(err) => console.log('error', err)}
           />
           {rectangleOverlay}
           <Animated.View
