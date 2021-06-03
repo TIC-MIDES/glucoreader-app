@@ -25,7 +25,7 @@ import Tts from 'react-native-tts';
 import ImageResizer from 'react-native-image-resizer';
 import RNBeep from 'react-native-a-beep';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {openDatabase} from 'react-native-sqlite-storage';
+import SQLite from 'react-native-sqlite-storage';
 
 const styles = StyleSheet.create({
   button: {
@@ -173,7 +173,10 @@ const defaultState = {
   number: 0,
 };
 
-var db = openDatabase({name: 'sqlite.db'});
+const db = SQLite.openDatabase({
+  name: 'main',
+  createFromLocation: '~www/main.db',
+});
 export default class Camera extends React.Component {
   static propTypes = {
     cameraIsOn: PropTypes.bool,
@@ -411,13 +414,12 @@ export default class Camera extends React.Component {
           db.transaction(function (tx) {
             tx.executeSql(
               'INSERT INTO records (timestamp_ms, result) VALUES (?,?)',
-              [new Date().getTime(), res.data.data.value],
+              [new Date().getTime(), +res.data.data.value],
             );
           });
           this.setState({...defaultState}, () => this.turnOnCamera());
         })
-        .catch((err) => {
-          console.log(err);
+        .catch(() => {
           Tts.speak(
             'No se pudo leer correctamente el resultado. Intente nuevamente.',
             {

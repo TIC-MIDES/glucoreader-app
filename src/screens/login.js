@@ -12,9 +12,12 @@ import {
 } from 'react-native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {openDatabase} from 'react-native-sqlite-storage';
+import SQLite from 'react-native-sqlite-storage';
 
-var db = openDatabase({name: 'sqlite.db'});
+const db = SQLite.openDatabase({
+  name: 'main',
+  createFromLocation: '~www/main.db',
+});
 export default class Login extends React.Component {
   constructor(props) {
     super(props);
@@ -31,11 +34,11 @@ export default class Login extends React.Component {
 
   componentDidMount() {
     Promise.all([
-      AsyncStorage.getItem('user_id'),
+      AsyncStorage.getItem('token'),
       AsyncStorage.getItem('user_ci'),
     ])
-      .then(([id, ci]) => {
-        if (id) {
+      .then(([token, ci]) => {
+        if (token) {
           this.setState({isLoggedIn: true});
         }
         if (ci) {
@@ -67,11 +70,10 @@ export default class Login extends React.Component {
           password: password,
         })
         .then(async (response) => {
-          await AsyncStorage.setItem(
-            'user_id',
-            response.data.data.user.id.toString(),
-          );
+          const {data} = response.data;
+          await AsyncStorage.setItem('user_id', data.user.id.toString());
           await AsyncStorage.setItem('user_ci', email.toString());
+          await AsyncStorage.setItem('token', data.token.token);
           return props.navigation.replace('Camera');
         })
         .catch(async (_error) => {
@@ -91,44 +93,78 @@ export default class Login extends React.Component {
   };
 
   exportHistoric = async () => {
-    const {records, exportToEmail, isLoggedIn} = this.state;
-    if (isLoggedIn) {
-      await db.transaction((tx) => {
-        tx.executeSql('SELECT * FROM records;', [], (tx, results) => {
-          const rows = results.rows;
-          let records = [];
-          for (let i = 0; i < rows.length; i++) {
-            records.push({
-              ...rows.item(i),
-            });
-          }
-          this.setState({records});
+    try {
+      const {exportToEmail, isLoggedIn} = this.state;
+      this.setState({
+        isLoading: true,
+      });
+
+      if (!isLoggedIn) {
+        const records = await new Promise((resolve, reject) => {
+          db.transaction((tx) => {
+            console.log(tx);
+            tx.executeSql(
+              'SELECT * FROM records',
+              [],
+              (tx, results) => {
+                console.log(results.rows);
+                const rows = results.rows;
+                let records = [];
+                for (let i = 0; i < rows.length; i++) {
+                  records.push({
+                    ...rows.item(i),
+                  });
+                }
+                resolve(records);
+              },
+              (error) => {
+                console.log(error);
+                reject(error);
+              },
+            );
+          });
         });
+        console.log(records);
+        await axios.post(
+          'http://179.27.96.192/api/1.0/measures/excel-anonymous',
+          {
+            email: exportToEmail?.trim()?.toLowerCase(),
+            data: records.map((r) => ({
+              date: r.timestamp_ms,
+              measure: r.result,
+            })),
+          },
+        );
+      } else {
+        const token = await AsyncStorage.getItem('token');
+        const headers = {
+          headers: {
+            Authorization: 'token ' + token,
+          },
+        };
+        await axios.post(
+          'http://179.27.96.192/api/1.0/measures/excel',
+          {
+            email: exportToEmail?.trim()?.toLowerCase(),
+          },
+          {headers},
+        );
+      }
+
+      this.setState({
+        isLoading: false,
+      });
+      Alert.alert('Registros enviados correctamente.');
+    } catch (error) {
+      Alert.alert(
+        'Ha ocurrido un error inesperado, por favor, intente nuevamente.',
+      );
+      this.setState({
+        isLoading: false,
       });
     }
-    this.setState({
-      isLoading: true,
-    });
-    await axios
-      .post('http://179.27.96.192/api/1.0/measures', {
-        email: exportToEmail, // the email is the ci
-        data: records.map((r) => ({date: r.timestamp_ms, measure: r.result})),
-      })
-      .then(async (response) => {
-        Alert.alert('Registros enviados correctamente.');
-        this.setState({
-          isLoading: false,
-        });
-      })
-      .catch(async (_error) => {
-        Alert.alert(
-          'Ha ocurrido un error, ingrese sus credenciales nuevamente.',
-        );
-        this.setState({
-          isLoading: false,
-        });
-      });
   };
+
   render() {
     const {
       exportToEmail,
