@@ -414,7 +414,7 @@ export default class Camera extends React.Component {
           db.transaction(function (tx) {
             tx.executeSql(
               'INSERT INTO records (timestamp_ms, result) VALUES (?,?)',
-              [new Date().getTime(), +res.data.data.value],
+              [new Date().toLocaleString(), +res.data.data.value],
             );
           });
           this.setState({...defaultState}, () => this.turnOnCamera());

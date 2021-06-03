@@ -58,7 +58,7 @@ export default class Login extends React.Component {
 
   userLogin = async (props) => {
     const {email, password} = this.state;
-    if (email === '' && password === '') {
+    if (!email || !password || (email?.trim() === '' && password === '')) {
       Alert.alert('Ingrese sus credenciales por favor.');
     } else {
       this.setState({
@@ -66,7 +66,7 @@ export default class Login extends React.Component {
       });
       await axios
         .post('http://179.27.96.192/api/1.0/auth/login', {
-          cedula: email, // the email is the ci
+          cedula: email.trim().toLowerCase(), // the email is the ci
           password: password,
         })
         .then(async (response) => {
@@ -78,7 +78,7 @@ export default class Login extends React.Component {
         })
         .catch(async (_error) => {
           Alert.alert(
-            'Ha ocurrido un error, ingrese sus credenciales nuevamente.',
+            'Verifique sus credenciales de inicio de sesión por favor.',
           );
           this.setState({
             isLoading: false,
@@ -102,12 +102,10 @@ export default class Login extends React.Component {
       if (!isLoggedIn) {
         const records = await new Promise((resolve, reject) => {
           db.transaction((tx) => {
-            console.log(tx);
             tx.executeSql(
               'SELECT * FROM records',
               [],
               (tx, results) => {
-                console.log(results.rows);
                 const rows = results.rows;
                 let records = [];
                 for (let i = 0; i < rows.length; i++) {
@@ -118,13 +116,11 @@ export default class Login extends React.Component {
                 resolve(records);
               },
               (error) => {
-                console.log(error);
                 reject(error);
               },
             );
           });
         });
-        console.log(records);
         await axios.post(
           'http://179.27.96.192/api/1.0/measures/excel-anonymous',
           {
