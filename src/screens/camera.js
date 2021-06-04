@@ -417,7 +417,11 @@ export default class Camera extends React.Component {
               [new Date().toLocaleString(), +res.data.data.value],
             );
           });
-          this.setState({...defaultState}, () => this.turnOnCamera());
+          this.setState({
+            takingPicture: false,
+            processingImage: false,
+            showScannerView: this.props.cameraIsOn || false,
+          });
         })
         .catch(() => {
           Tts.speak(
@@ -430,7 +434,11 @@ export default class Camera extends React.Component {
               },
             },
           );
-          this.setState({...defaultState}, () => this.turnOnCamera());
+          this.setState({
+            takingPicture: false,
+            processingImage: false,
+            showScannerView: this.props.cameraIsOn || false,
+          });
         });
     } else {
       Tts.speak(
@@ -443,7 +451,11 @@ export default class Camera extends React.Component {
           },
         },
       );
-      this.setState({...defaultState}, () => this.turnOnCamera());
+      this.setState({
+        takingPicture: false,
+        processingImage: false,
+        showScannerView: this.props.cameraIsOn || false,
+      });
     }
   };
 
