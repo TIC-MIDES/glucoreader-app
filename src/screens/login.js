@@ -133,10 +133,8 @@ export default class Login extends React.Component {
         );
       } else {
         const token = await AsyncStorage.getItem('token');
-        const headers = {
-          headers: {
+        const headers = { 
             Authorization: 'token ' + token,
-          },
         };
         await axios.post(
           'http://179.27.96.192/api/1.0/measures/excel',
