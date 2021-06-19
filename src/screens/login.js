@@ -65,7 +65,7 @@ export default class Login extends React.Component {
         isLoading: true,
       });
       await axios
-        .post('http://179.27.96.192/api/1.0/auth/login', {
+        .post('http://179.27.96.192:8000/api/1.0/auth/login', {
           cedula: email.trim().toLowerCase(), // the email is the ci
           password: password,
         })
@@ -122,7 +122,7 @@ export default class Login extends React.Component {
           });
         });
         await axios.post(
-          'http://179.27.96.192/api/1.0/measures/excel-anonymous',
+          'http://179.27.96.192:8000/api/1.0/measures/excel-anonymous',
           {
             email: exportToEmail?.trim()?.toLowerCase(),
             data: records.map((r) => ({
@@ -133,11 +133,11 @@ export default class Login extends React.Component {
         );
       } else {
         const token = await AsyncStorage.getItem('token');
-        const headers = { 
-            Authorization: 'token ' + token,
+        const headers = {
+          Authorization: 'token ' + token,
         };
         await axios.post(
-          'http://179.27.96.192/api/1.0/measures/excel',
+          'http://179.27.96.192:8000/api/1.0/measures/excel',
           {
             email: exportToEmail?.trim()?.toLowerCase(),
           },

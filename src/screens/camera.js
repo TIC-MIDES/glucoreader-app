@@ -395,10 +395,13 @@ export default class Camera extends React.Component {
         })
         .then(async (base64) => {
           const value = await AsyncStorage.getItem('user_id');
-          return axios.post('http://179.27.96.192/api/1.0/measures/measure', {
-            user_id: value ? +value : 0,
-            measure_picture: base64,
-          });
+          return axios.post(
+            'http://179.27.96.192:8000/api/1.0/measures/measure',
+            {
+              user_id: value ? +value : 0,
+              measure_picture: base64,
+            },
+          );
         })
         .then((res) => {
           Tts.speak(
