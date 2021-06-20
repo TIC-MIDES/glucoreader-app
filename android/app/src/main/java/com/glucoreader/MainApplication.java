@@ -17,6 +17,8 @@ import androidx.multidex.MultiDexApplication;
 import com.reactnativecommunity.asyncstorage.AsyncStoragePackage;
 import com.facebook.react.shell.MainReactPackage;
 import org.pgsqlite.SQLitePluginPackage;
+import com.ninty.system.setting.SystemSettingPackage;
+
 
 public class MainApplication extends MultiDexApplication implements ReactApplication {
 
@@ -35,6 +37,7 @@ public class MainApplication extends MultiDexApplication implements ReactApplica
           new RestartPackage(); // Add this line 
           new SQLitePluginPackage();
           new MainReactPackage();
+          new SystemSettingPackage();
           return packages;
         }
 

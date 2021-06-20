@@ -12,4 +12,6 @@ include ':@react-native-async-storage'
 project(':@react-native-async-storage').projectDir = new File(rootProject.projectDir, '../node_modules/@react-native-async-storage/async-storage/android')
 include ':react-native-sqlite-storage'
 project(':react-native-sqlite-storage').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-sqlite-storage/platforms/android')
+include ':react-native-system-setting'
+project(':react-native-system-setting').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-system-setting/android')
 include ':app'

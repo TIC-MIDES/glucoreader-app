@@ -228,6 +228,8 @@ dependencies {
     implementation project(':@react-native-async-storage')
     implementation project(':react-native-restart')
     implementation project(':react-native-sqlite-storage')
+
+    compile project(':react-native-system-setting')
 }
 
 // Run this once to be able to run the application with BUCK

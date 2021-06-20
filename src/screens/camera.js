@@ -26,6 +26,7 @@ import ImageResizer from 'react-native-image-resizer';
 import RNBeep from 'react-native-a-beep';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import SQLite from 'react-native-sqlite-storage';
+import SystemSetting from 'react-native-system-setting';
 
 const styles = StyleSheet.create({
   button: {
@@ -100,7 +101,6 @@ const styles = StyleSheet.create({
   cameraOutline: {
     borderColor: 'white',
     borderRadius: 50,
-    display: 'none',
     borderWidth: 3,
     height: 70,
     width: 70,
@@ -115,7 +115,7 @@ const styles = StyleSheet.create({
     height: 50,
     justifyContent: 'center',
     margin: 8,
-    paddingTop: 2,
+    paddingTop: 7,
     width: 50,
   },
   loadingCameraMessage: {
@@ -194,6 +194,8 @@ export default class Camera extends React.Component {
     initialFilterId: Filters.PLATFORM_DEFAULT_FILTER_ID,
   };
 
+  volumeListener;
+
   constructor(props) {
     super(props);
     this.state = {
@@ -232,6 +234,10 @@ export default class Camera extends React.Component {
     if (this.state.didLoadInitialLayout && !this.state.isMultiTasking) {
       this.turnOnCamera();
     }
+    // listen the volume changing if you need
+    this.volumeListener = SystemSetting.addVolumeListener(() => {
+      if (this.capture()) this.capture();
+    });
   }
 
   componentDidUpdate() {
@@ -260,6 +266,7 @@ export default class Camera extends React.Component {
 
   componentWillUnmount() {
     AppState.removeEventListener('change', this._handleAppStateChange);
+    SystemSetting.removeVolumeListener(this.volumeListener);
     clearTimeout(this.imageProcessorTimeout);
   }
 
@@ -302,19 +309,19 @@ export default class Camera extends React.Component {
   // Determine why the camera is disabled.
   getCameraDisabledMessage() {
     if (this.state.isMultiTasking) {
-      return 'Camera is not allowed in multi tasking mode.';
+      return 'El acceso a cámara no está habilitado en multi-tarea.';
     }
 
     const {device} = this.state;
     if (device.initialized) {
       if (!device.hasCamera) {
-        return 'Could not find a camera on the device.';
+        return 'No se ha encontrado una cámara en el dispositivo.';
       }
       if (!device.permissionToUseCamera) {
-        return 'Permission to use camera has not been granted.';
+        return 'Permiso de acceso a cámara denegado.';
       }
     }
-    return 'Failed to set up the camera.';
+    return 'Procesando solicitud';
   }
 
   // On some android devices, the aspect ratio of the preview is different than
@@ -379,10 +386,9 @@ export default class Camera extends React.Component {
   };
 
   // The picture was taken and cached. You can now go on to using it.
-  onPictureProcessed = (event) => {
-    this.props.onPictureProcessed(event);
+  onPictureProcessed = async (event) => {
     if (event.initialImage) {
-      ImageResizer.createResizedImage(
+      await ImageResizer.createResizedImage(
         event?.initialImage,
         720,
         1280,
@@ -420,7 +426,6 @@ export default class Camera extends React.Component {
               [new Date().toLocaleString(), +res.data.data.value],
             );
           });
-          this.setState({...defaultState}, () => this.turnOnCamera());
         })
         .catch(() => {
           Tts.speak(
@@ -433,25 +438,14 @@ export default class Camera extends React.Component {
               },
             },
           );
-          this.setState({...defaultState}, () => this.turnOnCamera());
         });
-    } else {
-      Tts.speak(
-        'No se pudo capturar correctamente el dispositivo. Intente nuevamente.',
-        {
-          androidParams: {
-            KEY_PARAM_PAN: -1,
-            KEY_PARAM_VOLUME: 5,
-            KEY_PARAM_STREAM: 'STREAM_MUSIC',
-          },
-        },
-      );
-      this.setState({
-        takingPicture: false,
-        processingImage: false,
-        showScannerView: this.props.cameraIsOn || false,
-      });
     }
+    this.props.onPictureProcessed(event);
+    this.setState({
+      takingPicture: false,
+      processingImage: false,
+      showScannerView: this.props.cameraIsOn || false,
+    });
   };
 
   // Flashes the screen on capture
@@ -501,6 +495,29 @@ export default class Camera extends React.Component {
     }
   }
 
+  // Renders the flashlight button. Only shown if the device has a flashlight.
+  renderFlashControl() {
+    const {flashEnabled, device} = this.state;
+    if (!device.flashIsAvailable) return null;
+    return (
+      <TouchableOpacity
+        style={[
+          styles.flashControl,
+          {backgroundColor: flashEnabled ? '#FFFFFF80' : '#00000080'},
+        ]}
+        activeOpacity={0.8}
+        onPress={() => this.setState({flashEnabled: !flashEnabled})}>
+        <Icon
+          name="ios-flashlight"
+          style={[
+            styles.buttonIcon,
+            {fontSize: 28, color: flashEnabled ? '#333' : '#FFF'},
+          ]}
+        />
+      </TouchableOpacity>
+    );
+  }
+
   addOne() {
     if (this.state.number > 10) {
       this.setState({number: 0, showScannerView: false}, () => {
@@ -518,85 +535,29 @@ export default class Camera extends React.Component {
     clearTimeout(this.timer);
   }
 
-  renderDoctorButtonControl() {
-    return (
-      <TouchableOpacity
-        style={[styles.flashControl, {backgroundColor: '#00000080'}]}
-        activeOpacity={0.8}
-        onPressIn={this.addOne}
-        onPressOut={this.stopTimer}>
-        <Icon
-          name="medkit-outline"
-          style={[styles.buttonIcon, {fontSize: 28, color: '#FFF'}]}
-        />
-      </TouchableOpacity>
-    );
-  }
-
   // Renders the camera controls. This will show controls on the side for large tablet screens
   // or on the bottom for phones. (For small tablets it will adjust the view a little bit).
   renderCameraControls() {
-    const dimensions = Dimensions.get('window');
-    const aspectRatio = dimensions.height / dimensions.width;
-    const isPhone = aspectRatio > 1.6;
     const cameraIsDisabled =
       this.state.takingPicture || this.state.processingImage;
     const disabledStyle = {opacity: cameraIsDisabled ? 0.8 : 1};
-    if (!isPhone) {
-      if (dimensions.height < 500) {
-        return (
-          <View style={styles.buttonContainer}>
-            <View style={[styles.cameraOutline, disabledStyle]}>
-              <TouchableOpacity
-                activeOpacity={0.8}
-                style={styles.cameraButton}
-                onPress={this.capture}
-              />
-            </View>
-          </View>
-        );
-      }
-      return (
-        <View style={styles.buttonContainer}>
-          <View
-            style={[
-              styles.buttonActionGroup,
-              {justifyContent: 'flex-end', marginBottom: 20},
-            ]}>
-            {this.renderDoctorButtonControl()}
-          </View>
-          <View style={[styles.cameraOutline, disabledStyle]}>
-            <TouchableOpacity
-              activeOpacity={0.8}
-              style={styles.cameraButton}
-              onPress={this.capture}
-            />
-          </View>
-        </View>
-      );
-    }
 
     return (
       <>
         <View style={styles.buttonBottomContainer}>
-          <View style={[styles.cameraOutline, disabledStyle]}>
+          <View style={styles.buttonGroup}>
             <TouchableOpacity
+              style={styles.button}
+              onPress={this.props.onCancel}
               activeOpacity={0.8}
-              style={styles.cameraButton}
-              onPress={this.capture}
-            />
-          </View>
-          <View>
-            <View
-              style={[
-                styles.buttonActionGroup,
-                {
-                  justifyContent: 'flex-end',
-                  marginBottom: this.props.hideSkip ? 0 : 16,
-                },
-              ]}>
-              {this.renderDoctorButtonControl()}
-            </View>
+              onPressIn={this.addOne}
+              onPressOut={this.stopTimer}>
+              <Icon
+                name="medkit-outline"
+                style={[styles.buttonIcon, {fontSize: 28, color: '#FFF'}]}
+              />
+              <Text style={styles.buttonText}>Doctor</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </>
@@ -718,7 +679,7 @@ export default class Camera extends React.Component {
         <View style={styles.overlay}>
           <View style={styles.loadingContainer}>
             <ActivityIndicator color="white" />
-            <Text style={styles.loadingCameraMessage}>Cargando cámera</Text>
+            <Text style={styles.loadingCameraMessage}>Cargando cámara</Text>
           </View>
         </View>
       );
