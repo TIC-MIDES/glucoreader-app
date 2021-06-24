@@ -410,34 +410,42 @@ export default class Camera extends React.Component {
           );
         })
         .then((res) => {
-          Tts.speak(
-            `Su nivel de glucosa en la sangre es de ${res.data.data.value}`,
-            {
-              androidParams: {
-                KEY_PARAM_PAN: -1,
-                KEY_PARAM_VOLUME: 5,
-                KEY_PARAM_STREAM: 'STREAM_MUSIC',
+          try {
+            Tts.speak(
+              `Su nivel de glucosa en la sangre es de ${res.data.data.value}`,
+              {
+                androidParams: {
+                  KEY_PARAM_PAN: -1,
+                  KEY_PARAM_VOLUME: 5,
+                  KEY_PARAM_STREAM: 'STREAM_MUSIC',
+                },
               },
-            },
-          );
-          db.transaction(function (tx) {
-            tx.executeSql(
-              'INSERT INTO records (timestamp_ms, result) VALUES (?,?)',
-              [new Date().toLocaleString(), +res.data.data.value],
             );
-          });
+            db.transaction(function (tx) {
+              tx.executeSql(
+                'INSERT INTO records (timestamp_ms, result) VALUES (?,?)',
+                [new Date().toLocaleString(), +res.data.data.value],
+              );
+            });
+          } catch (error) {
+            console.log(error);
+          }
         })
         .catch(() => {
-          Tts.speak(
-            'No se pudo leer correctamente el resultado. Intente nuevamente.',
-            {
-              androidParams: {
-                KEY_PARAM_PAN: -1,
-                KEY_PARAM_VOLUME: 5,
-                KEY_PARAM_STREAM: 'STREAM_MUSIC',
+          try {
+            Tts.speak(
+              'No se pudo leer correctamente el resultado. Intente nuevamente.',
+              {
+                androidParams: {
+                  KEY_PARAM_PAN: -1,
+                  KEY_PARAM_VOLUME: 5,
+                  KEY_PARAM_STREAM: 'STREAM_MUSIC',
+                },
               },
-            },
-          );
+            );
+          } catch (error) {
+            console.log(error);
+          }
         });
     }
     this.props.onPictureProcessed(event);
