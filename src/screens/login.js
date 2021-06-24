@@ -65,7 +65,7 @@ export default class Login extends React.Component {
         isLoading: true,
       });
       await axios
-        .post('https://179.27.96.192:9443/api/1.0/auth/login', {
+        .post('https://glucotest.um.edu.uy:9443/api/1.0/auth/login', {
           cedula: email.trim().toLowerCase(), // the email is the ci
           password: password,
         })
@@ -122,7 +122,7 @@ export default class Login extends React.Component {
           });
         });
         await axios.post(
-          'https://179.27.96.192:9443/api/1.0/measures/excel-anonymous',
+          'https://glucotest.um.edu.uy:9443/api/1.0/measures/excel-anonymous',
           {
             email: exportToEmail?.trim()?.toLowerCase(),
             data: records.map((r) => ({
@@ -137,7 +137,7 @@ export default class Login extends React.Component {
           Authorization: 'token ' + token,
         };
         await axios.post(
-          'https://179.27.96.192:9443/api/1.0/measures/excel',
+          'https://glucotest.um.edu.uy:9443/api/1.0/measures/excel',
           {
             email: exportToEmail?.trim()?.toLowerCase(),
           },
