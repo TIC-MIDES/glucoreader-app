@@ -402,7 +402,7 @@ export default class Camera extends React.Component {
         .then(async (base64) => {
           const value = await AsyncStorage.getItem('user_id');
           return axios.post(
-            'https://179.27.96.192:9443/api/1.0/measures/measure',
+            'http://179.27.96.192:8000/api/1.0/measures/measure',
             {
               user_id: value ? +value : 0,
               measure_picture: base64,
@@ -428,7 +428,14 @@ export default class Camera extends React.Component {
               );
             });
           } catch (error) {
-            console.log(error);
+            console.log(
+              '==============================================',
+              {
+                error,
+                name: `Su nivel de glucosa en la sangre es de ${res.data.data.value}`,
+              },
+              '==============================================',
+            );
           }
         })
         .catch(() => {
@@ -444,7 +451,14 @@ export default class Camera extends React.Component {
               },
             );
           } catch (error) {
-            console.log(error);
+            console.log(
+              '==============================================',
+              {
+                error,
+                name: 'No se pudo leer correctamente el resultado. Intente nuevamente.',
+              },
+              '==============================================',
+            );
           }
         });
     }
