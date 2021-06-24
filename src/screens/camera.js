@@ -428,7 +428,14 @@ export default class Camera extends React.Component {
               );
             });
           } catch (error) {
-            console.log(error);
+            console.log(
+              '==============================================',
+              {
+                error,
+                name: `Su nivel de glucosa en la sangre es de ${res.data.data.value}`,
+              },
+              '==============================================',
+            );
           }
         })
         .catch(() => {
@@ -444,7 +451,14 @@ export default class Camera extends React.Component {
               },
             );
           } catch (error) {
-            console.log(error);
+            console.log(
+              '==============================================',
+              {
+                error,
+                name: 'No se pudo leer correctamente el resultado. Intente nuevamente.',
+              },
+              '==============================================',
+            );
           }
         });
     }
